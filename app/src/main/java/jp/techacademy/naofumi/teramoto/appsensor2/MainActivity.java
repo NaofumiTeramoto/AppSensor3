@@ -23,7 +23,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.sql.Time;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 import static android.os.Environment.getDataDirectory;
 
@@ -32,8 +36,10 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     SensorManager sm;
     Sensor s;
     SampleSensorEventListener sse;
-    int flag = 0;
+    int flag = 1;
     TextView textViewX;
+    String fileNape;
+    String filePath;
 //    TextView textViewY = (TextView) findViewById(R.id.textViewY);
 //    TextView textViewZ = (TextView) findViewById(R.id.textViewZ);
 //    Button button1 = (Button) findViewById(R.id.button1);
@@ -61,12 +67,29 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     @Override
     public void onClick(View v) {
         Button button1 = (Button) findViewById(R.id.button1);
-        Log.d("UI_PARTS", "ボタンをタップしました");
         if (flag == 0) {
-            button1.setText("停止");
+            Log.d("UI_PARTS", "ボタンをタップしました:flag=0");
+            button1.setText("記録");
+            String[] filePaths = {filePath};
+            String[] mimeTypes = {"text/plain"};
+
+            MediaScannerConnection.scanFile(getApplicationContext(),
+                    filePaths,
+                    mimeTypes,
+                    null);
             flag = 1;
         } else {
-            button1.setText("記録");
+            Log.d("UI_PARTS", "ボタンをタップしました:flag=1");
+            // 現在の時刻を取得
+            Date date = new Date();
+            // 表示形式を設定
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy'-'MM'-'dd'_'kk'-'mm'-'ss");
+            String fileName = sdf.format(date);
+
+            fileNape = "Acceleration Data " + fileName+".txt";
+//            Log.d("UI_PARTS",  "fileNape:"+ fileNape);
+
+            button1.setText("停止");
             flag = 0;
         }
     }
@@ -100,12 +123,18 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
                 textViewY.setText("Y方向 " + df1.format(e.values[1]));
                 textViewZ.setText("Z方向 " + df1.format(e.values[2]));
 
-                String et = new String(df1.format(e.values[0]) + "," + df1.format(e.values[1]) + "," + df1.format(e.values[2]));
+                Date date = new Date();
+                // 表示形式を設定
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy'-'MM'-'dd'_'kk'-'mm'-'ss");
+                String strTime = sdf.format(date);
+
+                String et = new String(strTime + ","+ df1.format(e.values[0]) + "," + df1.format(e.values[1]) + "," + df1.format(e.values[2]));
 
                 if (flag == 0) {
-//                        String filePath = "test.txt";
-                    String filePath = Environment.getExternalStorageDirectory() + "/SensorApp/test.txt";
+                    filePath = Environment.getExternalStorageDirectory() + "/SensorApp/"+fileNape;
+//                    String filePath = Environment.getExternalStorageDirectory() + "/SensorApp/text.txt";
 //                        String filePath = "/storage/sdcard/Android/data/test.txt";
+
                     File file = new File(filePath);
                     file.getParentFile().mkdir();
                     file.setReadable(true, true);
@@ -118,16 +147,12 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
                         OutputStreamWriter osw = new OutputStreamWriter(fos, "UTF-8");
                         BufferedWriter bw = new BufferedWriter(osw);
 
+                        bw.newLine();
                         bw.write(et);
                         bw.flush();
                         bw.close();
-                        String[] filePaths = {filePath};
-                        String[] mimeTypes = {"text/plain"};
+                        Log.d("UI_PARTS",  "記録中：fileNape:"+ fileNape);
 
-                        MediaScannerConnection.scanFile(getApplicationContext(),
-                                filePaths,
-                                mimeTypes,
-                                null);
 
                     } catch (FileNotFoundException ee) {
                         Log.d("UI_PARTS", "FilenotfoundException");
