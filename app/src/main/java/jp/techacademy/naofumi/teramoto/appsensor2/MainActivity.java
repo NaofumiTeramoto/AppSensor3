@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
             String fileName = sdf.format(date);
 
             fileNape = "Acceleration Data " + fileName+".txt";
-//            Log.d("UI_PARTS",  "fileNape:"+ fileNape);
+            Log.d("UI_PARTS",  "fileNape:"+ fileNape);
 
             button1.setText("停止");
             flag = 0;
