@@ -28,6 +28,8 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static android.os.Environment.getDataDirectory;
 
@@ -40,6 +42,10 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     TextView textViewX;
     String fileNape;
     String filePath;
+    String et;
+    long time1;
+    long time2;
+    Timer mTimer;
 //    TextView textViewY = (TextView) findViewById(R.id.textViewY);
 //    TextView textViewZ = (TextView) findViewById(R.id.textViewZ);
 //    Button button1 = (Button) findViewById(R.id.button1);
@@ -62,6 +68,47 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         textViewZ.setText("Ｚ方向：");
 
         sse = new SampleSensorEventListener();
+
+        mTimer = new Timer();
+        mTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+
+                if (flag == 0) {
+                    filePath = Environment.getExternalStorageDirectory() + "/SensorApp/" + fileNape;
+                    File file = new File(filePath);
+                    file.getParentFile().mkdir();
+                    file.setReadable(true, true);
+                    file.setWritable(true, true);
+
+
+                    FileOutputStream fos;
+
+
+                    try {
+                        fos = new FileOutputStream(file, true);
+                        OutputStreamWriter osw = new OutputStreamWriter(fos, "UTF-8");
+                        BufferedWriter bw = new BufferedWriter(osw);
+
+                        bw.newLine();
+                        bw.write(et);
+                        bw.flush();
+                        bw.close();
+                        Log.d("UI_PARTS", "経過した秒数 = " + et);
+
+
+                    } catch (FileNotFoundException ee) {
+                        Log.d("UI_PARTS", "FilenotfoundException");
+
+                    } catch (IOException ee) {
+                        Log.d("UI_PARTS", "IOException");
+
+                    }
+                } else {
+//                    tv[2].setText(String.valueOf(flag));
+                }
+            }
+        },100,10);
     }
 
     @Override
@@ -85,8 +132,9 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
             // 表示形式を設定
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy'-'MM'-'dd'_'kk'-'mm'-'ss");
             String fileName = sdf.format(date);
+            time1 = System.currentTimeMillis();
 
-            fileNape = "Acceleration Data " + fileName+".txt";
+            fileNape = "Acceleration Data " + fileName+".csv";
 //            Log.d("UI_PARTS",  "fileNape:"+ fileNape);
 
             button1.setText("停止");
@@ -100,7 +148,9 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         sm = (SensorManager) getSystemService(
                 Context.SENSOR_SERVICE);
         s = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sm.registerListener(sse, s, SensorManager.SENSOR_DELAY_NORMAL);
+//        sm.registerListener(sse, s, SensorManager.SENSOR_DELAY_NORMAL);
+        sm.registerListener(sse, s, 5000);
+
     }
 
     protected void onPause() {
@@ -125,49 +175,13 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
 
                 Date date = new Date();
                 // 表示形式を設定
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy'-'MM'-'dd'_'kk'-'mm'-'ss");
-                String strTime = sdf.format(date);
+                time2 = System.currentTimeMillis();
 
-                String et = new String(strTime + ","+ df1.format(e.values[0]) + "," + df1.format(e.values[1]) + "," + df1.format(e.values[2]));
-
-                if (flag == 0) {
-                    filePath = Environment.getExternalStorageDirectory() + "/SensorApp/"+fileNape;
-//                    String filePath = Environment.getExternalStorageDirectory() + "/SensorApp/text.txt";
-//                        String filePath = "/storage/sdcard/Android/data/test.txt";
-
-                    File file = new File(filePath);
-                    file.getParentFile().mkdir();
-                    file.setReadable(true, true);
-                    file.setWritable(true, true);
-
-
-                    FileOutputStream fos;
-                    try {
-                        fos = new FileOutputStream(file, true);
-                        OutputStreamWriter osw = new OutputStreamWriter(fos, "UTF-8");
-                        BufferedWriter bw = new BufferedWriter(osw);
-
-                        bw.newLine();
-                        bw.write(et);
-                        bw.flush();
-                        bw.close();
-                        Log.d("UI_PARTS",  "記録中：fileNape:"+ fileNape);
-
-
-                    } catch (FileNotFoundException ee) {
-                        Log.d("UI_PARTS", "FilenotfoundException");
-
-                    } catch (IOException ee) {
-                        Log.d("UI_PARTS", "IOException");
-
-                    }
-                } else {
-//                    tv[2].setText(String.valueOf(flag));
-                }
+                et = new String((time2 - time1) / 1000.0 + "," + df1.format(e.values[0]) + "," + df1.format(e.values[1]) + "," + df1.format(e.values[2]));
             }
         }
-
         public void onAccuracyChanged(Sensor s, int accuracy) {
         }
     }
+
 }
